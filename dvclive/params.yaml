@@ -1,0 +1,12 @@
+data_ingestion_pages: 2
+data_ingestion_page_size: 100
+feature_engineering_test_size: 0.2
+feature_engineering_random_state: 42
+feature_engineering_max_df: 0.8
+feature_engineering_max_features: 200000
+feature_engineering_min_df: 0.02
+feature_engineering_stop_words: english
+feature_engineering_use_idf: true
+model_training_n_estimators: 200
+model_training_learning_rate: 0.1
+model_training_max_depth: 10
