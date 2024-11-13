@@ -164,10 +164,16 @@ def main():
             save_model_info(run.info.run_id,'model','reports/exp_info.json')
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
-            mlflow.log_artifact(__file__)
+
 
 
             experiment_tracking('params.yaml',accuracy,precision,recall,auc)
+            metrics_path = 'metrics.json'
+            store(metrics_path, accuracy, precision, recall, auc)
+            
+            # Log metrics.json as an artifact in MLflow
+            mlflow.log_artifact(metrics_path)  # This will log the file to MLflow
+
             
             path3 = 'metrics.json'
             store(path3,accuracy,precision,recall,auc)

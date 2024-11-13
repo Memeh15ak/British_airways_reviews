@@ -48,8 +48,11 @@ stages:
     - data/interim
     - model.pkl
     - src/models/model_evaluation.py
-    outs:
+    metrics:
     - metrics.json
+    outs:
+    - reports/exp_info.json
+
   model_registration:
     cmd: python src/models/model_registry.py
     deps:
