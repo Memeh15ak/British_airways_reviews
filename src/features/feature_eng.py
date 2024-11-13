@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 import os
 import yaml
 import logging
+import pickle
 
 logger=logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
@@ -91,6 +92,7 @@ def tfidf(max_df:float, max_features:int, min_df:float, stop_words:list, use_idf
             max_df=max_df, max_features=max_features, min_df=min_df,
             stop_words=stop_words, use_idf=use_idf
         )
+        pickle.dump(tfidf_vectorizer,open('models/tfidf','wb'))
         tfidf_matrix_train = tfidf_vectorizer.fit_transform(X_train)
         tfidf_matrix_test = tfidf_vectorizer.transform(X_test)
 

@@ -8,6 +8,7 @@ from dvclive import Live
 import yaml
 import dagshub 
 import mlflow
+import os
 
 mlflow.set_tracking_uri('https://dagshub.com/Memeh15ak/British_airways_reviews.mlflow')
 dagshub.init(repo_owner='Memeh15ak', repo_name='British_airways_reviews', mlflow=True)
@@ -125,33 +126,55 @@ def store(path:str,accuracy:float,precision:float,recall:float,auc:float):
         raise
 logger.debug('metrics created')
 
+def save_model_info(run_id,model_info,path):
+    try:
+        info={
+            'run_id':run_id,
+            'model_path':model_info
+        }
+        with open(path, 'w') as file:
+            json.dump(info, file, indent=4)
+    except Exception as e:
+        logger.error (f"An error occurred while storing metrics: {e}")
+        raise
+logger.debug('metrics created')
+
 def main():
     mlflow.set_experiment('dvc-pipeline')
-    mlflow.start_run()
-    try:
-        path = 'data/interim/tfidf_test.csv'
-        path2 = 'data/interim/y_test.csv'
-        model_path = 'model.pkl'
-        tfidf_test, rf_model, y_test, y_pred = read_data(path, model_path, path2)
+    with mlflow.start_run() as run:
+        try:
+            path = 'data/interim/tfidf_test.csv'
+            path2 = 'data/interim/y_test.csv'
+            model_path = 'model.pkl'
+            tfidf_test, rf_model, y_test, y_pred = read_data(path, model_path, path2)
+            
+            accuracy,precision,recall,auc = metrics(y_test, y_pred)
+            mlflow.log_metric('accuracy',accuracy)
+            mlflow.log_metric('precision',precision)
+            mlflow.log_metric('recall',recall)
+            
+            if hasattr(rf_model,'get_params'):
+                params=rf_model.get_params()
+                for param_name,param_value in params.items():
+                    mlflow.log_param(param_name,param_value)
+            
+            X_train = pd.read_csv('data/interim/tfidf_train.csv')
+            X_test = pd.read_csv('data/interim/tfidf_test.csv')
+            mlflow.sklearn.log_model(rf_model, "random_forest")
+            save_model_info(run.info.run_id,'model','reports/exp_info.json')
+            mlflow.set_tag('author', 'mehak')
+            mlflow.set_tag("experiment1", 'rf')
+            mlflow.log_artifact(__file__)
+
+
+            experiment_tracking('params.yaml',accuracy,precision,recall,auc)
+            
+            path3 = 'metrics.json'
+            store(path3,accuracy,precision,recall,auc)
         
-        accuracy,precision,recall,auc = metrics(y_test, y_pred)
-        mlflow.log_metric('accuracy',accuracy)
-        mlflow.log_metric('precision',precision)
-        mlflow.log_metric('recall',recall)
-        
-        if hasattr(rf_model,'get_params'):
-            params=rf_model.get_params()
-            for param_name,param_value in params.items():
-                mlflow.log_param(param_name,param_value)
-        
-        experiment_tracking('params.yaml',accuracy,precision,recall,auc)
-        
-        path3 = 'metrics.json'
-        store(path3,accuracy,precision,recall,auc)
-    
-    except Exception as e:
-        logger.error (f"An unexpected error occurred in the main function: {e}")
-        raise
+        except Exception as e:
+            logger.error (f"An unexpected error occurred in the main function: {e}")
+            raise
 
 if __name__ == "__main__":
     main()

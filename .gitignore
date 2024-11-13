@@ -90,3 +90,4 @@ target/
 
 myenv
 /metrics.json
+/model.pkl
