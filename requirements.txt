@@ -1,10 +1,18 @@
 # local package
--e .
-
-# external requirements
-click
-Sphinx
-coverage
-awscli
-flake8
-python-dotenv>=0.5.1
+mlflow
+pandas
+numpy
+matplotlib
+scikit_learn
+dvc
+bs4
+nltk
+dvclive
+dagshub
+# # external requirements
+# click
+# Sphinx
+# coverage
+# awscli
+# flake8
+# python-dotenv>=0.5.1
