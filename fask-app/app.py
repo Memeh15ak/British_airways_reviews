@@ -10,16 +10,12 @@ app = Flask(__name__)
 mlflow.set_tracking_uri('https://dagshub.com/Memeh15ak/British_airways_reviews.mlflow')
 dagshub.init(repo_owner='Memeh15ak', repo_name='British_airways_reviews', mlflow=True)
 
-<<<<<<< HEAD
 # Load the registered model from MLflow
 model_name = 'final_british_rf'
 model_version = 11
 model_uri = f'models:/{model_name}/{model_version}'
 model = mlflow.pyfunc.load_model(model_uri)
-=======
-model_name='final_british_rf'
-model_version = 4
->>>>>>> c7e5e277d26dc00f5970e89a41e0287731f8d4e3
+
 
 # Load the pre-trained TF-IDF vectorizer from a pickle file
 vectorizer = pickle.load(open('models/tfidf.pkl', 'rb'))
@@ -31,30 +27,29 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        text = request.form['text']
+        # Retrieve the text input from the user
         
-        # Apply preprocessing to the text (assuming `main` returns preprocessed text)
-        text = main(text)  # Ensure `text` is a list of words or tokens
-        
-        # Transform the text using the pre-trained vectorizer
-        features = vectorizer.transform([text])  # Apply transform, not fit_transform
-        
-        # Make predictions using the MLflow model
+        # Load the pre-trained TF-IDF vectorizer
+        vectorizer = pickle.load(open('models/tfidf.pkl', 'rb'))
+
+        text = 'arshad is a good happy boy'
+
+        # Process the text through your preprocessing function
+        processed_text = main(text)
+
+        # If `main(text)` returns a list of tuples, extract the first element of each tuple and join them into a string
+        text = ' '.join([t[0] for t in processed_text])  # Assuming main returns tuples like [('word', ...)]
+
+        # Now transform the preprocessed text
+        features = vectorizer.transform([text])
         result = model.predict(features)
-        
-        # Return the prediction result to the user
+        print(result)
         return render_template('index.html', result=result[0])
-    
+
     except Exception as e:
         # Log any errors and show an error message to the user
         print(f"Error: {e}")
         return render_template('index.html', result="An error occurred. Please try again.")
 
-<<<<<<< HEAD
-# Run the app
-if __name__ == "__main__":
-    app.run(debug=True)
-=======
     
 app.run(debug=True)
->>>>>>> c7e5e277d26dc00f5970e89a41e0287731f8d4e3

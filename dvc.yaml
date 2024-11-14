@@ -31,6 +31,8 @@ stages:
 
     outs:
     - data/interim
+    - models/tfidf.pkl
+
   model_training:
     cmd: python src/models/model_training.py
     deps:
