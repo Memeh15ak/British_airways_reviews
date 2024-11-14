@@ -12,7 +12,7 @@ mlflow.set_tracking_uri('https://dagshub.com/Memeh15ak/British_airways_reviews.m
 dagshub.init(repo_owner='Memeh15ak', repo_name='British_airways_reviews', mlflow=True)
 
 model_name='final_british_rf'
-model_version = 3
+model_version = 4
 
 model_uri=f'models:/{model_name}/{model_version}'
 model=mlflow.pyfunc.load_model(model_uri)
