@@ -1,4 +1,4 @@
 [core]
     remote = myremote
 ['remote "myremote"']
-    url = C:\Users\acer\AppData\Local\Temp
+    url = ../Temp

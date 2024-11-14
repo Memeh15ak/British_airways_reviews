@@ -3,15 +3,15 @@ import numpy as np
 import nltk
 from nltk.stem import SnowballStemmer
 from nltk.corpus import stopwords
-nltk.download('averaged_perceptron_tagger')
-nltk.download('punkt')
-nltk.download('stopwords')
+# nltk.download('averaged_perceptron_tagger')
+# nltk.download('punkt')
+# nltk.download('stopwords')
 from nltk.chunk import RegexpParser
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
+# nltk.download('maxent_ne_chunker')
+# nltk.download('words')
 from nltk.sentiment import SentimentIntensityAnalyzer
 from tqdm.notebook import tqdm
-nltk.download('vader_lexicon')
+# nltk.download('vader_lexicon')
 import re
 import os
 import logging

@@ -10,11 +10,16 @@ app = Flask(__name__)
 mlflow.set_tracking_uri('https://dagshub.com/Memeh15ak/British_airways_reviews.mlflow')
 dagshub.init(repo_owner='Memeh15ak', repo_name='British_airways_reviews', mlflow=True)
 
+<<<<<<< HEAD
 # Load the registered model from MLflow
 model_name = 'final_british_rf'
 model_version = 11
 model_uri = f'models:/{model_name}/{model_version}'
 model = mlflow.pyfunc.load_model(model_uri)
+=======
+model_name='final_british_rf'
+model_version = 4
+>>>>>>> c7e5e277d26dc00f5970e89a41e0287731f8d4e3
 
 # Load the pre-trained TF-IDF vectorizer from a pickle file
 vectorizer = pickle.load(open('models/tfidf.pkl', 'rb'))
@@ -45,6 +50,11 @@ def predict():
         print(f"Error: {e}")
         return render_template('index.html', result="An error occurred. Please try again.")
 
+<<<<<<< HEAD
 # Run the app
 if __name__ == "__main__":
     app.run(debug=True)
+=======
+    
+app.run(debug=True)
+>>>>>>> c7e5e277d26dc00f5970e89a41e0287731f8d4e3
