@@ -1,10 +1,21 @@
 name: CI
 
-on: push
+on: 
+  push:
+     branches:
+       - master
+  pull_request:
+    
+
 
 jobs:
   linting:
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.os}}
+
+    strategy:
+      matrix: 
+        os: [ubuntu-latest,windows-latest,macos-latest]
+        version: ['3.11.5','3.12']
 
     steps:
       - name: code checkout
@@ -13,7 +24,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: ${{matrix.version}}
         
       - name: install flake8
         run: |
