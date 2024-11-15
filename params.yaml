@@ -6,7 +6,7 @@ feature_engineering:
   test_size: 0.2
   random_state: 42
   max_df: 0.85
-  max_features: 500
+  max_features: 1500
   min_df: 0.002
   stop_words: english
   use_idf: true
