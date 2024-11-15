@@ -6,6 +6,10 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import re
 
+import mlflow 
+import dagshub
+import pickle
+
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
@@ -43,3 +47,23 @@ def main(text: str) -> str:
     text = lemmatization(text)
     tokens = tokenize(text)
     return tokens  
+
+# model = pickle.load(open('model.pkl', 'rb'))
+
+# vectorizer = pickle.load(open('models/tfidf.pkl', 'rb'))
+
+
+# text = 'i am very happy and impressed'
+        
+
+# print(text)
+  
+# processed_text = main(text) 
+# print(processed_text)
+# features = vectorizer.transform([text])
+# print(features)
+# features_df = pd.DataFrame(features.toarray(), columns=vectorizer.get_feature_names_out())
+# print(features_df)
+# result = model.predict(features_df)
+# print(result)
+

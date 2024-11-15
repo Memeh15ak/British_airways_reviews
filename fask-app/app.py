@@ -17,7 +17,7 @@ mlflow.set_tracking_uri('https://dagshub.com/Memeh15ak/British_airways_reviews.m
 dagshub.init(repo_owner='Memeh15ak', repo_name='British_airways_reviews', mlflow=True)
 
 model_name = 'final_british_rf'
-model_version = 19
+model_version = 22
 model_uri = f'models:/{model_name}/{model_version}'
 model = mlflow.pyfunc.load_model(model_uri)
 
@@ -30,14 +30,16 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        text = request.form.get('text_input', '')
+        text = request.form['text'] 
+           
+        print(text)
         
-  
         processed_text = main(text) 
-
+        print(processed_text)
         features = vectorizer.transform([text])
+        print(features)
         features_df = pd.DataFrame(features.toarray(), columns=vectorizer.get_feature_names_out())
-
+        print(features_df)
         result = model.predict(features_df)
         print(result)
         logger.debug(f"Prediction result: {result}")
