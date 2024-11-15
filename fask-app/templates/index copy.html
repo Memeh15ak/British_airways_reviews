@@ -8,55 +8,45 @@
             /* Overall page style */
             body {
                 font-family: 'Arial', sans-serif;
-                background-color: #FCE4EC; /* Light pink background */
-                color: #4A148C; /* Purple text color */
+                background: url('file:///C:/Users/arsha/Downloads/debugger/British_airways_reviews/fask-app/static/flight_image.jpeg') no-repeat center center fixed; /* Absolute path for local testing */
+                background-size: cover;
+                color: #4A148C;
                 margin: 0;
                 padding: 0;
                 display: flex;
                 flex-direction: column;
-                justify-content: center;
+                justify-content: flex-end; /* Align content towards the bottom */
                 align-items: center;
                 height: 100vh;
+                text-align: center;
             }
 
             h1 {
-                color: #D81B60; /* Dark pink color for the header */
+                font-family: 'Algerian', serif;
+                color: #974c68; /* Dark pink color for the header */
                 font-size: 36px;
-                margin-bottom: 20px;
+                margin-bottom: 10px;
+                z-index: 1; /* Ensures header is above other elements */
             }
 
             h2 {
                 color: #8E24AA; /* A soft purple-pink */
                 font-size: 28px;
                 margin-top: 20px;
+                z-index: 1;
             }
 
-            /* Style the form container */
-            form {
-                background-color: #fff; /* White background for the form */
-                padding: 30px;
-                border-radius: 15px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                width: 400px;
-                text-align: center;
-            }
-
-            label {
-                font-size: 18px;
-                color: #7B1FA2;
-                margin-bottom: 10px;
-                display: block;
-            }
-
+            /* Style the text input box */
             textarea {
-                width: 100%;
+                width: 60%; /* Make the text box less wide */
                 padding: 10px;
                 border: 2px solid #F8BBD0; /* Soft pink border */
                 border-radius: 8px;
                 resize: none;
                 font-size: 16px;
                 margin-bottom: 20px;
-                background-color: #F8BBD0; /* Light pink background */
+                background-color: rgba(255, 255, 255, 0.7); /* Very light white background */
+                z-index: 1;
             }
 
             input[type="submit"] {
@@ -68,6 +58,7 @@
                 border-radius: 8px;
                 cursor: pointer;
                 transition: background-color 0.3s ease;
+                z-index: 1;
             }
 
             input[type="submit"]:hover {
@@ -78,11 +69,12 @@
             .result {
                 margin-top: 30px;
                 padding: 20px;
-                background-color: #F8BBD0;
+                background-color: rgba(248, 187, 208, 0.8); /* Semi-transparent background */
                 border-radius: 12px;
                 text-align: center;
                 width: 300px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 1;
             }
 
             .positive {
@@ -100,18 +92,21 @@
     </head>
     <body>
         <h1>Flight Reviews Sentiment Analysis</h1>
+        
+        <!-- Textarea input for review -->
+        <textarea name="text" id="text" rows="5" placeholder="Write your review here..."></textarea><br>
+
+        <!-- Submit button -->
         <form action="/predict" method="POST">
-            <label for="text">Write your review:</label><br>
-            <textarea name="text" id="text" rows="5" cols="40"></textarea><br>
             <input type="submit" value="Predict">
         </form>
 
         {% if result is not none %}
             <div class="result">
                 {% if result == 1 %}
-                    <h2 class="positive">Positive Sentiment</h2>
+                    <h2 class="positive">Positive Sentiment ❤️</h2>
                 {% elif result == 0 %}
-                    <h2 class="negative">Negative Sentiment</h2>
+                    <h2 class="negative">Negative Sentiment 💔</h2>
                 {% endif %}
             </div>
         {% endif %}

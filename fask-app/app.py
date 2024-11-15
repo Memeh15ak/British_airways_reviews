@@ -8,7 +8,8 @@ import pandas as pd
 import numpy as np
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
