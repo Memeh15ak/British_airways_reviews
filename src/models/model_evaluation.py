@@ -1,14 +1,14 @@
-import numpy as np
 import pandas as pd
-from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, roc_auc_score
+import numpy as np
 import pickle
-import json
+import os
 import logging
+from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, roc_auc_score
 from dvclive import Live
 import yaml
-import dagshub 
 import mlflow
-import os
+import json
+import dagshub
 
 # Set timeout and retry configurations for MLflow
 os.environ["MLFLOW_HTTP_REQUEST_MAX_RETRIES"] = "5"
@@ -33,7 +33,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-def read_data(path:str, model_path:str, path2:str) -> pd.DataFrame:
+def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
     try:
         tfidf_test = pd.read_csv(path)
     except FileNotFoundError:
@@ -61,6 +61,17 @@ def read_data(path:str, model_path:str, path2:str) -> pd.DataFrame:
 
     try:
         y_pred = rf_model.predict(tfidf_test)
+        y_pred1 = pd.DataFrame(y_pred)
+
+        # Ensure the directory exists before saving the file
+        os.makedirs('data/interim/y_pred', exist_ok=True)
+
+        # Now save the predictions file
+        y_pred1.to_csv('data/interim/y_pred/y_pred.csv', index=False)
+        logger.info("Data saved successfully")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred while saving data: {e}")
+        raise
     except Exception as e:
         logger.error(f"An error occurred while making predictions: {e}")
         raise
@@ -82,8 +93,7 @@ def read_data(path:str, model_path:str, path2:str) -> pd.DataFrame:
 
 logger.debug('file loaded successfully')
 
-
-def metrics(y_test:pd.DataFrame, y_pred:pd.DataFrame) -> float:
+def metrics(y_test: pd.DataFrame, y_pred: pd.DataFrame) -> float:
     try:
         accuracy = accuracy_score(y_test, y_pred)
         precision = precision_score(y_test, y_pred)
@@ -97,8 +107,7 @@ def metrics(y_test:pd.DataFrame, y_pred:pd.DataFrame) -> float:
 
 logger.debug('metrics created')
 
-
-def experiment_tracking(path:str, accuracy:float, precision:float, recall:float, auc:float):
+def experiment_tracking(path: str, accuracy: float, precision: float, recall: float, auc: float):
     try:
         with open(path, 'r') as f:
             params = yaml.safe_load(f)
@@ -118,8 +127,7 @@ def experiment_tracking(path:str, accuracy:float, precision:float, recall:float,
 
 logger.debug('experiment tracked successfully')
 
-
-def store(path:str, accuracy:float, precision:float, recall:float, auc:float):
+def store(path: str, accuracy: float, precision: float, recall: float, auc: float):
     try:
         metrics_dict = {
             'accuracy': accuracy,

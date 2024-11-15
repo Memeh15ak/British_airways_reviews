@@ -7,27 +7,30 @@ import os
 import yaml
 import logging
 import pickle
+from nltk.corpus import stopwords
+import nltk
+nltk.download('stopwords')
 
-logger=logging.getLogger('data_ingestion')
+logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
 
-console_handler=logging.StreamHandler()
+console_handler = logging.StreamHandler()
 console_handler.setLevel('DEBUG')
 
-file_handler=logging.FileHandler('errors.log')
+file_handler = logging.FileHandler('errors.log')
 file_handler.setLevel('ERROR')
 
-formatter=logging.Formatter('%(asctime)sss - %(name)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
 console_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-
-def load_data(path: str)->pd.DataFrame:
+def load_data(path: str) -> pd.DataFrame:
     try:
         df_new = pd.read_csv(path)
+        logger.info("File loaded successfully")
         return df_new
     except FileNotFoundError:
         logger.error(f"File not found at {path}")
@@ -38,21 +41,23 @@ def load_data(path: str)->pd.DataFrame:
     except Exception as e:
         logger.error(f"An unexpected error occurred while loading data: {e}")
         raise
-    
-logger.debug('file loaded sucessfully')    
 
-
-def yaml_params(path:str)-> dict:
+def yaml_params(path: str) -> dict:
     try:
         with open(path, 'r') as file:
             params = yaml.safe_load(file)['feature_engineering']
+        
         max_df = params['max_df']
         max_features = params['max_features']
         min_df = params['min_df']
-        test_size = params['test_size']
+        test_size = float(params['test_size'])  # Ensure it's a float
         random_state = params['random_state']
-        stop_words = params['stop_words']
+        
+        # If 'stop_words' is 'english', use the built-in stopwords, else use custom stop words list
+        stop_words = params['stop_words'] if params['stop_words'] != 'english' else stopwords.words('english')
+        
         use_idf = params['use_idf']
+        
         return max_df, max_features, min_df, test_size, random_state, stop_words, use_idf
     except FileNotFoundError:
         logger.error(f"YAML file not found at {path}")
@@ -66,15 +71,13 @@ def yaml_params(path:str)-> dict:
     except Exception as e:
         logger.error(f"An unexpected error occurred while reading YAML file: {e}")
         raise
-    
-logger.debug('parameter extracted from yaml')
 
-
-def test_split(test_size: str, df:pd.DataFrame, random_state:int)-> pd.DataFrame:
+def test_split(test_size: float, df: pd.DataFrame, random_state: int) -> pd.DataFrame:
     try:
         X_train, X_test, y_train, y_test = train_test_split(
             df['reviews'], df['sentiment'], test_size=test_size, random_state=random_state
         )
+        logger.info("Train-test split successful")
         return X_train, X_test, y_train, y_test
     except KeyError as e:
         logger.error(f"The dataframe does not contain the expected columns: {e}")
@@ -82,11 +85,8 @@ def test_split(test_size: str, df:pd.DataFrame, random_state:int)-> pd.DataFrame
     except Exception as e:
         logger.error(f"An unexpected error occurred during the train-test split: {e}")
         raise
-    
-logger.debug('train test splitted from main dataframe')
 
-
-def tfidf(max_df:float, max_features:int, min_df:float, stop_words:list, use_idf:bool, X_train:pd.DataFrame, X_test:pd.DataFrame, y_train:pd.Series, y_test:pd.Series)->pd.DataFrame:
+def tfidf(max_df: float, max_features: int, min_df: float, stop_words: list, use_idf: bool, X_train: pd.DataFrame, X_test: pd.DataFrame, y_train: pd.Series, y_test: pd.Series) -> pd.DataFrame:
     try:
         tfidf_vectorizer = TfidfVectorizer(
             max_df=max_df, max_features=max_features, min_df=min_df,
@@ -102,11 +102,11 @@ def tfidf(max_df:float, max_features:int, min_df:float, stop_words:list, use_idf
 
         label_encoder = LabelEncoder()
         tfidf_df_train['output'] = label_encoder.fit_transform(tfidf_df_train['output'])
-        y_test = label_encoder.fit_transform(y_test)
+        y_test = label_encoder.transform(y_test)
         y_test = pd.DataFrame(y_test, columns=['output'])
 
-        pickle.dump(tfidf_vectorizer,open('models/tfidf.pkl','wb'))
-
+        pickle.dump(tfidf_vectorizer, open('models/tfidf.pkl', 'wb'))
+        logger.info("TF-IDF vectorization and model saving successful")
 
         return tfidf_df_train, tfidf_df_test, y_test
     except ValueError as e:
@@ -115,22 +115,18 @@ def tfidf(max_df:float, max_features:int, min_df:float, stop_words:list, use_idf
     except Exception as e:
         logger.error(f"An unexpected error occurred during TF-IDF vectorization: {e}")
         raise
-    
-logger.debug('tfidf applied sucessfully')
 
-
-def store_data(path:str, df1:pd.DataFrame, df2:pd.DataFrame, df3:pd.DataFrame):
+def store_data(path: str, df1: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFrame):
     try:
         os.makedirs(path, exist_ok=True)
         
         df1.to_csv(os.path.join(path, 'tfidf_train.csv'), index=False)
         df2.to_csv(os.path.join(path, 'tfidf_test.csv'), index=False)
         df3.to_csv(os.path.join(path, 'y_test.csv'), index=False)
+        logger.info("Data saved successfully")
     except Exception as e:
         logger.error(f"An unexpected error occurred while saving data: {e}")
         raise
-    
-logger.debug('data stored succesfully')
 
 def main():
     try:
