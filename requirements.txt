@@ -173,4 +173,6 @@ wrapt==1.16.0
 yarl==1.9.4
 zc.lockfile==3.0.post1
 zipp==3.19.2
+BeautifulSoup4
+
 
