@@ -99,7 +99,7 @@ def store_data(path: str, file_n: str, df: pd.DataFrame):
 
 def main():
     try:
-        path = 'data\\raw\\raw_data.csv'
+        path = './data/raw/raw_data.csv'
         df = load(path)
         
         if df is not None:
@@ -110,8 +110,8 @@ def main():
             df['pos'] = df['reviews_words'].apply(pos)
             df['sentiment'] = df['reviews'].apply(func)
 
-            data_path = 'data/processed'
-            file_n = 'processed_data.csv'
+            data_path = './data/processed'
+            file_n = './processed_data.csv'
             df_new = df[['reviews', 'sentiment']]
             store_data(data_path, file_n, df_new)
         else:

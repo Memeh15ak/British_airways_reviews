@@ -130,7 +130,7 @@ def store_data(path: str, df1: pd.DataFrame, df2: pd.DataFrame, df3: pd.DataFram
 
 def main():
     try:
-        path = 'data/processed/processed_data.csv'
+        path = './data/processed/processed_data.csv'
         df_new = load_data(path)
         
         new_path = 'params.yaml'
@@ -142,7 +142,7 @@ def main():
             max_df, max_features, min_df, stop_words, use_idf, X_train, X_test, y_train, y_test
         )
         
-        data_path = 'data/interim'
+        data_path = './data/interim'
         store_data(data_path, tfidf_df_train, tfidf_df_test, y_test)
     
     except Exception as e:

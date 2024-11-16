@@ -88,8 +88,8 @@ def main():
     try:
         n_estimators, learning_rate, max_depth = yaml_params('params.yaml')
         
-        train_path = 'data/interim/tfidf_train.csv'
-        test_path = 'data/interim/tfidf_test.csv'
+        train_path = './data/interim/tfidf_train.csv'
+        test_path = './data/interim/tfidf_test.csv'
         tfidf_df_train, tfidf_df_test = read_data(train_path, test_path)
         
         gbm_model = train(n_estimators, tfidf_df_train, learning_rate, max_depth)

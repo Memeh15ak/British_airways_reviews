@@ -49,10 +49,10 @@ logger.debug('data stored sucessfully')
 
 def main():
     try:
-       path='raw/raw_data.csv'
+       path='./raw/raw.csv'
        df=load(path)
        
-       path='data/raw'
+       path='./data/raw'
        file_n='raw_data.csv'
        store(path,file_n,df)
     
