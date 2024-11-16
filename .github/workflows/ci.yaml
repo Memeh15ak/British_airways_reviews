@@ -1,31 +1,32 @@
 name: CI
 
-on: push
-    
-
+on: 
+  push:
+    branches:
+      - master 
 
 jobs:
   project-testing:
     runs-on: ubuntu-latest
 
     steps:
-      - name: code checkout
+      - name: Code checkout
         uses: actions/checkout@v3
 
-      - name: setup python
+      - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.11.5'
-          
+
       - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashfiles('requirements.txt') }}
-          restore_keys: |
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
             ${{ runner.os }}-pip-
-        
-      - name: install dependencies
+
+      - name: Install dependencies
         run: |
           pip install -r requirements.txt
 
@@ -36,8 +37,8 @@ jobs:
           python -m nltk.downloader wordnet
           python -m nltk.downloader punkt
 
-      - name: run pipeline
+      - name: Run pipeline
         env: 
-          DAGSHUB_PAT: ${{secrets.DAGSHUB_PAT}}
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Using secrets for secure access
         run: |
           dvc repro

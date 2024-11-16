@@ -164,9 +164,9 @@ def main():
     mlflow.set_experiment('dvc-pipeline')
     with mlflow.start_run() as run:
         try:
-            path = 'data/interim/tfidf_test.csv'
-            path2 = 'data/interim/y_test.csv'
-            model_path = 'model.pkl'
+            path = './data/interim/tfidf_test.csv'
+            path2 = './data/interim/y_test.csv'
+            model_path = './model.pkl'
             tfidf_test, rf_model, y_test, y_pred = read_data(path, model_path, path2)
             
             accuracy, precision, recall, auc = metrics(y_test, y_pred)
@@ -185,8 +185,8 @@ def main():
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 
-            experiment_tracking('params.yaml', accuracy, precision, recall, auc)
-            metrics_path = 'metrics.json'
+            experiment_tracking('./params.yaml', accuracy, precision, recall, auc)
+            metrics_path = './metrics.json'
             store(metrics_path, accuracy, precision, recall, auc)
             
             mlflow.log_artifact(metrics_path)

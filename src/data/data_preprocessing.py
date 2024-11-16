@@ -12,6 +12,7 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('vader_lexicon')
 nltk.download('punkt')
+nltk.download("averaged_perceptron_tagger")
 
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')

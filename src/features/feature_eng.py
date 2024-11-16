@@ -11,6 +11,7 @@ from nltk.corpus import stopwords
 import nltk
 nltk.download('stopwords')
 nltk.download('vader_lexicon')
+nltk.download("averaged_perceptron_tagger")
 
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
