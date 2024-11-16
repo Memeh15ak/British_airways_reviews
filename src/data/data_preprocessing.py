@@ -73,9 +73,10 @@ def tokenize_words(text: str) -> list:
         logger.error(f"An error occurred during tokenization: {e}")
         return []
 
-def pos(text: str) -> str:
+def pos(text: str) -> list:
     try:
-        tagged = nltk.pos_tag(text.split())
+        words = text.split()  # Split the string into a list of words
+        tagged = nltk.pos_tag(words)  # Apply POS tagging to the list of words
         return tagged
     except Exception as e:
         logger.error(f"An error occurred during POS tagging: {e}")
@@ -110,7 +111,7 @@ def main():
             df['reviews'] = df['reviews'].apply(lower_case)  # Apply lower case here
             df['reviews'] = df['reviews'].apply(lemmatization)  # Apply lemmatization here
             df['reviews_words'] = df['reviews'].apply(tokenize_words)
-            df['pos'] = df['reviews_words'].apply(pos)
+            df['pos'] = df['reviews'].apply(pos)
             df['sentiment'] = df['reviews'].apply(func)
 
             data_path = './data/processed'
