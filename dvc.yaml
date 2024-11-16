@@ -3,9 +3,6 @@ stages:
     cmd: python src/data/data_ingestion.py
     deps:
     - src/data/data_ingestion.py
-    params:
-    - data_ingestion.pages
-    - data_ingestion.page_size
     outs:
     - data/raw
   data_preprocessing:
