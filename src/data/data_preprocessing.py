@@ -3,7 +3,11 @@ import numpy as np
 import nltk
 from nltk.stem import WordNetLemmatizer
 import nltk
-nltk.download('wordnet', download_dir='./download_nltk.py')
+import nltk
+import os
+nltk_data_path = os.path.expanduser('~/.nltk_data')  # Default local path
+os.makedirs(nltk_data_path, exist_ok=True)
+nltk.download('wordnet', download_dir=nltk_data_path)
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import re
