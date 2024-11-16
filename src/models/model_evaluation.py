@@ -4,11 +4,12 @@ import pickle
 import os
 import logging
 from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, roc_auc_score
-import yaml
 import mlflow
+import yaml
 import json
+import dagshub
 
-# Setting up environment variables
+# Initialize Dagshub credentials and MLflow tracking
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
     raise EnvironmentError('DAGSHUB_PAT env is not set')
@@ -19,17 +20,17 @@ dagshub_url = "https://dagshub.com"
 repo_owner = "Memehak15ak"
 repo_name = "British_airways_reviews"
 
-mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}/mlflow')
 
 # Logger setup
 logger = logging.getLogger('data_ingestion')
-logger.setLevel(logging.DEBUG)
+logger.setLevel('DEBUG')
 
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
+console_handler.setLevel('DEBUG')
 
 file_handler = logging.FileHandler('errors.log')
-file_handler.setLevel(logging.ERROR)
+file_handler.setLevel('ERROR')
 
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
 console_handler.setFormatter(formatter)
@@ -38,21 +39,31 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-# Read data and model
-def read_data(path: str, model_path: str, path2: str):
+# Function to read data
+def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
     try:
         tfidf_test = pd.read_csv(path)
-        logger.info(f"Successfully read test data from {path}")
-    except Exception as e:
-        logger.error(f"Failed to read test data from {path}: {e}")
+    except FileNotFoundError:
+        logger.error(f"Test data file not found at {path}")
         raise
-
+    except pd.errors.ParserError as e:
+        logger.error(f"Error parsing the test data CSV file: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"An unexpected error occurred while reading test data: {e}")
+        raise
+    
     try:
         with open(model_path, 'rb') as file:
             rf_model = pickle.load(file)
-        logger.info(f"Successfully loaded model from {model_path}")
+    except FileNotFoundError:
+        logger.error(f"Model file not found at {model_path}")
+        raise
+    except pickle.UnpicklingError as e:
+        logger.error(f"Error loading the model: {e}")
+        raise
     except Exception as e:
-        logger.error(f"Failed to load model from {model_path}: {e}")
+        logger.error(f"An unexpected error occurred while loading the model: {e}")
         raise
 
     try:
@@ -60,58 +71,64 @@ def read_data(path: str, model_path: str, path2: str):
         y_pred1 = pd.DataFrame(y_pred)
         os.makedirs('data/interim/y_pred', exist_ok=True)
         y_pred1.to_csv('data/interim/y_pred/y_pred.csv', index=False)
-        logger.info("Predictions saved successfully.")
+        logger.info("Data saved successfully")
     except Exception as e:
-        logger.error(f"Failed to make predictions or save data: {e}")
+        logger.error(f"An error occurred while making predictions or saving data: {e}")
         raise
 
     try:
         y_test_1 = pd.read_csv(path2)
         y_test = y_test_1.values
-        logger.info(f"Successfully read y_test data from {path2}")
+    except FileNotFoundError:
+        logger.error(f"y_test file not found at {path2}")
+        raise
+    except pd.errors.ParserError as e:
+        logger.error(f"Error parsing the y_test CSV file: {e}")
+        raise
     except Exception as e:
-        logger.error(f"Failed to read y_test data from {path2}: {e}")
+        logger.error(f"An unexpected error occurred while reading y_test data: {e}")
         raise
 
     return tfidf_test, rf_model, y_test, y_pred
 
-# Metrics function
-def metrics(y_test, y_pred):
+logger.debug('file loaded successfully')
+
+# Function to calculate evaluation metrics
+def metrics(y_test: pd.DataFrame, y_pred: pd.DataFrame) -> float:
     try:
         accuracy = accuracy_score(y_test, y_pred)
         precision = precision_score(y_test, y_pred)
         recall = recall_score(y_test, y_pred)
         auc = roc_auc_score(y_test, y_pred)
         report = classification_report(y_test, y_pred)
-        logger.info(f"Metrics calculated: accuracy={accuracy}, precision={precision}, recall={recall}, auc={auc}")
     except Exception as e:
-        logger.error(f"Error calculating metrics: {e}")
+        logger.error(f"An error occurred while calculating metrics: {e}")
         raise
     return accuracy, precision, recall, auc
 
-# Experiment tracking using MLflow
+logger.debug('metrics created')
+
+# Function for experiment tracking
 def experiment_tracking(path: str, accuracy: float, precision: float, recall: float, auc: float):
     try:
         with open(path, 'r') as f:
             params = yaml.safe_load(f)
         
-        # Use MLflow for experiment tracking
-        with mlflow.start_run() as run:
+        # Log metrics and params to DVC or MLflow
+        for param, value in params.items():
+            for key, val in value.items():
+                mlflow.log_param(f'{param}_{key}', val)
             mlflow.log_metric('accuracy', accuracy)
             mlflow.log_metric('precision', precision)
             mlflow.log_metric('recall', recall)
             mlflow.log_metric('auc', auc)
-            logger.info("Logged metrics to MLflow.")
-            
-            for param, value in params.items():
-                for key, val in value.items():
-                    mlflow.log_param(f'{param}_{key}', val)
-            logger.info("Logged parameters to MLflow.")
     except Exception as e:
-        logger.error(f"Error during experiment tracking with MLflow: {e}")
+        logger.error(f"An error occurred during experiment tracking: {e}")
         raise
 
-# Save metrics as a JSON file
+logger.debug('experiment tracked successfully')
+
+# Function to store metrics in a file
 def store(path: str, accuracy: float, precision: float, recall: float, auc: float):
     try:
         metrics_dict = {
@@ -122,12 +139,13 @@ def store(path: str, accuracy: float, precision: float, recall: float, auc: floa
         }
         with open(path, 'w') as file:
             json.dump(metrics_dict, file, indent=4)
-        logger.info(f"Metrics saved to {path}")
     except Exception as e:
-        logger.error(f"Error saving metrics to {path}: {e}")
+        logger.error(f"An error occurred while storing metrics: {e}")
         raise
 
-# Save model info
+logger.debug('metrics stored')
+
+# Function to save model information
 def save_model_info(run_id, model_info, path):
     try:
         info = {
@@ -136,21 +154,32 @@ def save_model_info(run_id, model_info, path):
         }
         with open(path, 'w') as file:
             json.dump(info, file, indent=4)
-        logger.info(f"Model information saved to {path}")
     except Exception as e:
-        logger.error(f"Error saving model info to {path}: {e}")
+        logger.error(f"An error occurred while storing model info: {e}")
         raise
 
-# Main experiment flow
+logger.debug('model info saved')
+
+# Main function to tie everything together
 def main():
-    mlflow.set_experiment('dvc-pipeline')
+    experiment_name = 'dvc-pipeline'
+    
+    # Check if the experiment exists; if not, create it
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        mlflow.create_experiment(experiment_name)
+    mlflow.set_experiment(experiment_name)
+    
     with mlflow.start_run() as run:
         try:
             path = './data/interim/tfidf_test.csv'
             path2 = './data/interim/y_test.csv'
             model_path = './model.pkl'
+            
+            # Read the data and load model
             tfidf_test, rf_model, y_test, y_pred = read_data(path, model_path, path2)
             
+            # Calculate evaluation metrics
             accuracy, precision, recall, auc = metrics(y_test, y_pred)
             
             # Log metrics to MLflow
@@ -158,34 +187,34 @@ def main():
             mlflow.log_metric('precision', precision)
             mlflow.log_metric('recall', recall)
             mlflow.log_metric('auc', auc)
-            logger.info("Metrics logged to MLflow.")
             
-            # Log parameters to MLflow
+            # Log model parameters if available
             if hasattr(rf_model, 'get_params'):
                 params = rf_model.get_params()
                 for param_name, param_value in params.items():
                     mlflow.log_param(param_name, param_value)
             
-            # Log model to MLflow
+            # Log the model to MLflow
             mlflow.sklearn.log_model(rf_model, "random_forest")
             
-            # Save model info to file
+            # Save model info
             save_model_info(run.info.run_id, 'model', 'reports/exp_info.json')
+            
+            # Log experiment details and metrics
+            mlflow.set_tag('author', 'mehak')
+            mlflow.set_tag("experiment1", 'rf')
 
-            # Log the experiment details to MLflow
+            # Track experiment and store metrics
             experiment_tracking('./params.yaml', accuracy, precision, recall, auc)
-
-            # Store metrics as JSON
             metrics_path = './metrics.json'
             store(metrics_path, accuracy, precision, recall, auc)
             
-            # Log the metrics file as artifact
+            # Log the metrics artifact
             mlflow.log_artifact(metrics_path)
-
+        
         except Exception as e:
-            logger.error(f"Error in the main function: {e}")
+            logger.error(f"An unexpected error occurred in the main function: {e}")
             raise
 
-# Entry point
 if __name__ == "__main__":
     main()
