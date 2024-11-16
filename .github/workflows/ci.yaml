@@ -29,6 +29,10 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Download NLTK Resources
+        run: |
+          python -c "import nltk; nltk.download('wordnet'); nltk.download('stopwords')"
+
       - name: run pipeline
         env: 
           DAGSHUB_PAT: ${{secrets.DAGSHUB_PAT}}

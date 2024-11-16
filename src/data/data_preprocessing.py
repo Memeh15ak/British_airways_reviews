@@ -2,12 +2,6 @@ import pandas as pd
 import numpy as np
 import nltk
 from nltk.stem import WordNetLemmatizer
-import nltk
-import nltk
-import os
-nltk_data_path = os.path.expanduser('~/.nltk_data')  # Default local path
-os.makedirs(nltk_data_path, exist_ok=True)
-nltk.download('wordnet', download_dir=nltk_data_path)
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import re
@@ -15,6 +9,7 @@ import os
 import logging
 from nltk.sentiment import SentimentIntensityAnalyzer
 nltk.download('stopwords')
+nltk.download('wordnet')
 
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
