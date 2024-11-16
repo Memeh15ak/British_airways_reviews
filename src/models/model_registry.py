@@ -3,13 +3,20 @@ import mlflow
 import logging
 import dagshub
 from mlflow.exceptions import MlflowException
+import os 
 
+dagshub_token=os.getenv("DAGSHUB_PAT")
+if not dagshub_token:
+    raise EnvironmentError('DAGSHUB_PAT env is not set')
+os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
-# Set up MLflow tracking URI and Dagshub integration
-mlflow.set_tracking_uri('https://dagshub.com/Memeh15ak/British_airways_reviews.mlflow')
-dagshub.init(repo_owner='Memeh15ak', repo_name='British_airways_reviews', mlflow=True)
+dagshub_url = "https://dagshub.com"
+repo_owner = "Memehak15ak"
+repo_name = "British_airways_reviews"
 
-# Set up logging
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
 
@@ -27,7 +34,6 @@ logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
 
-# Function to load model details from a JSON file
 def load_model(file_path: str) -> dict:
     try:
         with open(file_path, 'r') as file:
@@ -41,7 +47,6 @@ def load_model(file_path: str) -> dict:
         raise
 
 
-# Function to register the model with MLflow
 def register_model(model_name: str, model_info: dict):
     try:
         # Construct the model URI
@@ -71,7 +76,6 @@ def register_model(model_name: str, model_info: dict):
         raise
 
 
-# Main function to orchestrate model loading and registration
 def main():
     try:
         file_path = 'reports/exp_info.json'
@@ -85,6 +89,5 @@ def main():
         raise
 
 
-# Execute the main function if this script is run directly
 if __name__ == "__main__":
     main()

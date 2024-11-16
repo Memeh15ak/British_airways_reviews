@@ -21,6 +21,17 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashfiles('requirements.txt') }}
+          restore_keys: |
+            ${{ runner.os }}-pip-
+
+
       - name: run pipeline
+        env: 
+          DAGSHUB_PAT: ${{secrets.DAGSHUB_PAT}}
         run: |
           dvc repro

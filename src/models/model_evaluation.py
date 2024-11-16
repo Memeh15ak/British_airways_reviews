@@ -10,12 +10,18 @@ import mlflow
 import json
 import dagshub
 
-# Set timeout and retry configurations for MLflow
-os.environ["MLFLOW_HTTP_REQUEST_MAX_RETRIES"] = "5"
-os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "120"
 
-mlflow.set_tracking_uri('https://dagshub.com/Memeh15ak/British_airways_reviews.mlflow')
-dagshub.init(repo_owner='Memeh15ak', repo_name='British_airways_reviews', mlflow=True)
+dagshub_token=os.getenv("DAGSHUB_PAT")
+if not dagshub_token:
+    raise EnvironmentError('DAGSHUB_PAT env is not set')
+os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+dagshub_url = "https://dagshub.com"
+repo_owner = "Memehak15ak"
+repo_name = "British_airways_reviews"
+
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
@@ -63,10 +69,9 @@ def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
         y_pred = rf_model.predict(tfidf_test)
         y_pred1 = pd.DataFrame(y_pred)
 
-        # Ensure the directory exists before saving the file
         os.makedirs('data/interim/y_pred', exist_ok=True)
 
-        # Now save the predictions file
+        
         y_pred1.to_csv('data/interim/y_pred/y_pred.csv', index=False)
         logger.info("Data saved successfully")
     except Exception as e:

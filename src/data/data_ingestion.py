@@ -53,7 +53,7 @@ def main():
        df=load(path)
        
        path='data/raw'
-       file_n='raw.csv'
+       file_n='raw_data.csv'
        store(path,file_n,df)
     
     except Exception as e:
