@@ -4,12 +4,12 @@ import pickle
 import os
 import logging
 from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, roc_auc_score
-import mlflow
 import yaml
+import mlflow
 import json
 import dagshub
 
-# Initialize Dagshub credentials and MLflow tracking
+
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
     raise EnvironmentError('DAGSHUB_PAT env is not set')
@@ -20,9 +20,8 @@ dagshub_url = "https://dagshub.com"
 repo_owner = "Memehak15ak"
 repo_name = "British_airways_reviews"
 
-mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}/mlflow')
+mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-# Logger setup
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
 
@@ -39,7 +38,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-# Function to read data
 def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
     try:
         tfidf_test = pd.read_csv(path)
@@ -69,6 +67,7 @@ def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
     try:
         y_pred = rf_model.predict(tfidf_test)
         y_pred1 = pd.DataFrame(y_pred)
+
         os.makedirs('data/interim/y_pred', exist_ok=True)
         y_pred1.to_csv('data/interim/y_pred/y_pred.csv', index=False)
         logger.info("Data saved successfully")
@@ -93,7 +92,6 @@ def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
 
 logger.debug('file loaded successfully')
 
-# Function to calculate evaluation metrics
 def metrics(y_test: pd.DataFrame, y_pred: pd.DataFrame) -> float:
     try:
         accuracy = accuracy_score(y_test, y_pred)
@@ -108,27 +106,6 @@ def metrics(y_test: pd.DataFrame, y_pred: pd.DataFrame) -> float:
 
 logger.debug('metrics created')
 
-# Function for experiment tracking
-def experiment_tracking(path: str, accuracy: float, precision: float, recall: float, auc: float):
-    try:
-        with open(path, 'r') as f:
-            params = yaml.safe_load(f)
-        
-        # Log metrics and params to DVC or MLflow
-        for param, value in params.items():
-            for key, val in value.items():
-                mlflow.log_param(f'{param}_{key}', val)
-            mlflow.log_metric('accuracy', accuracy)
-            mlflow.log_metric('precision', precision)
-            mlflow.log_metric('recall', recall)
-            mlflow.log_metric('auc', auc)
-    except Exception as e:
-        logger.error(f"An error occurred during experiment tracking: {e}")
-        raise
-
-logger.debug('experiment tracked successfully')
-
-# Function to store metrics in a file
 def store(path: str, accuracy: float, precision: float, recall: float, auc: float):
     try:
         metrics_dict = {
@@ -142,10 +119,8 @@ def store(path: str, accuracy: float, precision: float, recall: float, auc: floa
     except Exception as e:
         logger.error(f"An error occurred while storing metrics: {e}")
         raise
-
 logger.debug('metrics stored')
 
-# Function to save model information
 def save_model_info(run_id, model_info, path):
     try:
         info = {
@@ -157,59 +132,36 @@ def save_model_info(run_id, model_info, path):
     except Exception as e:
         logger.error(f"An error occurred while storing model info: {e}")
         raise
-
 logger.debug('model info saved')
 
-# Main function to tie everything together
 def main():
-    experiment_name = 'dvc-pipeline'
-    
-    # Check if the experiment exists; if not, create it
-    experiment = mlflow.get_experiment_by_name(experiment_name)
-    if experiment is None:
-        mlflow.create_experiment(experiment_name)
-    mlflow.set_experiment(experiment_name)
-    
+    mlflow.set_experiment('dvc-pipeline')
     with mlflow.start_run() as run:
         try:
             path = './data/interim/tfidf_test.csv'
             path2 = './data/interim/y_test.csv'
             model_path = './model.pkl'
-            
-            # Read the data and load model
             tfidf_test, rf_model, y_test, y_pred = read_data(path, model_path, path2)
             
-            # Calculate evaluation metrics
             accuracy, precision, recall, auc = metrics(y_test, y_pred)
-            
-            # Log metrics to MLflow
             mlflow.log_metric('accuracy', accuracy)
             mlflow.log_metric('precision', precision)
             mlflow.log_metric('recall', recall)
             mlflow.log_metric('auc', auc)
             
-            # Log model parameters if available
             if hasattr(rf_model, 'get_params'):
                 params = rf_model.get_params()
                 for param_name, param_value in params.items():
                     mlflow.log_param(param_name, param_value)
             
-            # Log the model to MLflow
             mlflow.sklearn.log_model(rf_model, "random_forest")
-            
-            # Save model info
             save_model_info(run.info.run_id, 'model', 'reports/exp_info.json')
-            
-            # Log experiment details and metrics
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 
-            # Track experiment and store metrics
-            experiment_tracking('./params.yaml', accuracy, precision, recall, auc)
             metrics_path = './metrics.json'
             store(metrics_path, accuracy, precision, recall, auc)
             
-            # Log the metrics artifact
             mlflow.log_artifact(metrics_path)
         
         except Exception as e:
