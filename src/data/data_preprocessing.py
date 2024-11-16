@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import nltk
 from nltk.stem import WordNetLemmatizer
+import nltk
+nltk.download('wordnet', download_dir='./download_nltk.py')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import re
