@@ -57,10 +57,4 @@ stages:
     deps:
     - reports/exp_info.json
     - src/models/model_registry.py
-params:
-- params.yaml
-metrics:
-- metrics.json
-plots:
-- dvclive/plots/metrics:
-    x: step
+

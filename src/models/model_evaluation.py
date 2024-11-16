@@ -9,6 +9,7 @@ import mlflow
 import json
 import dagshub
 import mlflow.sklearn
+from mlflow.tracking import MlflowClient
 
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
@@ -68,8 +69,8 @@ def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
         y_pred = rf_model.predict(tfidf_test)
         y_pred1 = pd.DataFrame(y_pred)
 
-        os.makedirs('data/interim/y_pred', exist_ok=True)
-        y_pred1.to_csv('data/interim/y_pred/y_pred.csv', index=False)
+        os.makedirs('./data/interim/y_pred', exist_ok=True)
+        y_pred1.to_csv('./data/interim/y_pred/y_pred.csv', index=False)
         logger.info("Data saved successfully")
     except Exception as e:
         logger.error(f"An error occurred while making predictions or saving data: {e}")
@@ -136,12 +137,14 @@ logger.debug('model info saved')
 
 
 def main():
-    experiment_name = 'dvc-pipeline'
-
-    if mlflow.get_experiment_by_name(experiment_name) is None:
-        mlflow.create_experiment(experiment_name)
-
-    mlflow.set_experiment(experiment_name)
+    client = MlflowClient()
+    experiment = client.get_experiment_by_name("dvc-pipeline")
+    if experiment is None:
+       print("Experiment not found. Exiting...")
+       exit()
+    else:
+       print(f"Using experiment ID: {experiment.experiment_id}")
+       mlflow.set_experiment(experiment_id=experiment.experiment_id)  
     with mlflow.start_run() as run:
         try:
             path = './data/interim/tfidf_test.csv'
@@ -176,3 +179,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
