@@ -44,7 +44,7 @@ stages:
   model_evaluation:
     cmd: python src/models/model_evaluation.py
     deps:
-    - data/interim
+    - ./data/interim
     - model.pkl
     - src/models/model_evaluation.py
     metrics:
@@ -58,9 +58,9 @@ stages:
     - reports/exp_info.json
     - src/models/model_registry.py
 params:
-- dvclive/params.yaml
+- params.yaml
 metrics:
-- dvclive/metrics.json
+- metrics.json
 plots:
 - dvclive/plots/metrics:
     x: step
