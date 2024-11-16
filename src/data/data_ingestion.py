@@ -1,22 +1,24 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import requests
 from bs4 import BeautifulSoup
 import os
 import yaml
 import logging
+import time  # For time tracking
 
-logger=logging.getLogger('data_ingestion')
-logger.setLevel('DEBUG')
+# Logger setup
+logger = logging.getLogger('data_ingestion')
+logger.setLevel(logging.DEBUG)
 
-console_handler=logging.StreamHandler()
-console_handler.setLevel('DEBUG')
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
 
-file_handler=logging.FileHandler('errors.log')
-file_handler.setLevel('ERROR')
+file_handler = logging.FileHandler('errors.log')
+file_handler.setLevel(logging.ERROR)
 
-formatter=logging.Formatter('%(asctime)sss - %(name)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
 console_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
@@ -39,15 +41,24 @@ def yaml_params(path: str) -> int:
     except Exception as e:
         logger.error(f"Error: An unexpected error occurred while reading the YAML file: {e}")
         raise
-logger.debug('extraced values of pages and page size succesfully from yaml file')
+logger.debug('extracted values of pages and page size successfully from yaml file')
 
 def scrape_data(base_url : str, pages : int, page_size: int ) -> pd.DataFrame:
     reviews = []
+    headers = {
+        'User-Agent': (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/114.0.0.0 Safari/537.36"
+        )
+    }
+    start_time = time.time()  # Start time tracking
+
     for i in range(1, pages + 1):
         try:
             print(f"Scraping page {i}")
             url = f"{base_url}/page/{i}/?sortby=post_date%3ADesc&pagesize={page_size}"
-            response = requests.get(url)
+            response = requests.get(url, headers=headers)  # Added headers here
             response.raise_for_status() 
 
             content = response.content
@@ -64,6 +75,10 @@ def scrape_data(base_url : str, pages : int, page_size: int ) -> pd.DataFrame:
         except Exception as e:
             logger.error(f"Error: An unexpected error occurred during data scraping on page {i}: {e}")
             continue
+
+    end_time = time.time()  # End time tracking
+    elapsed_time = end_time - start_time
+    print(f"Scraping completed in {elapsed_time:.2f} seconds.")
 
     df = pd.DataFrame()
     df["reviews"] = reviews
@@ -89,7 +104,7 @@ def store(path : str, file_n : str, df: pd.DataFrame):
     except Exception as e:
         logger.error(f"Error: An error occurred while saving data to {path}: {e}")
         raise
-logger.debug('data stored sucessfully')
+logger.debug('data stored successfully')
 
 def main():
     try:
