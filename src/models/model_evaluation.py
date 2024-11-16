@@ -8,7 +8,7 @@ import yaml
 import mlflow
 import json
 import dagshub
-
+import mlflow.sklearn
 
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
@@ -134,8 +134,14 @@ def save_model_info(run_id, model_info, path):
         raise
 logger.debug('model info saved')
 
+
 def main():
-    mlflow.set_experiment('dvc-pipeline')
+    experiment_name = 'dvc-pipeline'
+
+    if mlflow.get_experiment_by_name(experiment_name) is None:
+        mlflow.create_experiment(experiment_name)
+
+    mlflow.set_experiment(experiment_name)
     with mlflow.start_run() as run:
         try:
             path = './data/interim/tfidf_test.csv'
@@ -155,7 +161,7 @@ def main():
                     mlflow.log_param(param_name, param_value)
             
             mlflow.sklearn.log_model(rf_model, "random_forest")
-            save_model_info(run.info.run_id, 'model', 'reports/exp_info.json')
+            save_model_info(run.info.run_id, 'model', './reports/exp_info.json')
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 
