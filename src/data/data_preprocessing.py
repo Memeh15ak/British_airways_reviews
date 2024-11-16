@@ -10,6 +10,8 @@ import logging
 from nltk.sentiment import SentimentIntensityAnalyzer
 nltk.download('stopwords')
 nltk.download('wordnet')
+nltk.download('vader_lexicon')
+nltk.download('punkt')
 
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')

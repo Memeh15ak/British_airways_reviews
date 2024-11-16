@@ -10,6 +10,7 @@ import pickle
 from nltk.corpus import stopwords
 import nltk
 nltk.download('stopwords')
+nltk.download('vader_lexicon')
 
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
