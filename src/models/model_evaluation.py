@@ -21,7 +21,7 @@ dagshub_url = "https://dagshub.com"
 repo_owner = "Memehak15ak"
 repo_name = "British_airways_reviews"
 
-mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+mlflow.set_tracking_uri(f'\{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 logger = logging.getLogger('data_ingestion')
 logger.setLevel('DEBUG')
@@ -138,7 +138,7 @@ logger.debug('model info saved')
 
 def main():
     client = MlflowClient()
-    experiment = client.get_experiment_by_name("dvc-pipeline")
+    experiment = client.get_experiment_by_name("dvc")
     if experiment is None:
        print("Experiment not found. Exiting...")
        exit()
