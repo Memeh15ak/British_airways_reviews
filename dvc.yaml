@@ -50,7 +50,7 @@ stages:
     metrics:
     - metrics.json
     outs:
-    - ./exp_info.json
+    - ./exp_inf.json
 
   model_registration:
     cmd: python src/models/model_registry.py

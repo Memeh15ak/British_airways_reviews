@@ -129,12 +129,13 @@ def save_model_info(run_id, model_info, path):
             'run_id': run_id,
             'model_path': model_info
         }
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as file:
             json.dump(info, file, indent=4)
     except Exception as e:
         logger.error(f"An error occurred while storing model info: {e}")
         raise
-logger.debug('model info saved')
+
 
 
 def main():
