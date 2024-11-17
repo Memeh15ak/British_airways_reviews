@@ -55,6 +55,6 @@ stages:
   model_registration:
     cmd: python src/models/model_registry.py
     deps:
-    - ./exp_info.json
+    - ./exp_inf.json
     - src/models/model_registry.py
 
