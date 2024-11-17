@@ -50,11 +50,11 @@ stages:
     metrics:
     - metrics.json
     outs:
-    - reports/exp_info.json
+    - ./exp_info.json
 
   model_registration:
     cmd: python src/models/model_registry.py
     deps:
-    - reports/exp_info.json
+    - ./exp_info.json
     - src/models/model_registry.py
 

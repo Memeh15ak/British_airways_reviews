@@ -139,7 +139,7 @@ logger.debug('model info saved')
 
 def main():
     client = MlflowClient()
-    experiment = client.get_experiment_by_name("dvc-pipeline")
+    experiment = client.get_experiment_by_name("dvc")
     if experiment is None:
        print("Experiment not found. Exiting...")
        exit()
@@ -165,7 +165,7 @@ def main():
                     mlflow.log_param(param_name, param_value)
             
             mlflow.sklearn.log_model(rf_model, "random_forest")
-            save_model_info(run.info.run_id, 'model', './reports/exp_info.json')
+            save_model_info(run.info.run_id, 'model', './exp_inf.json')
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 

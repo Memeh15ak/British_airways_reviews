@@ -78,7 +78,7 @@ def register_model(model_name: str, model_info: dict):
 
 def main():
     try:
-        file_path = './reports/exp_info.json'
+        file_path = './exp_info.json'
         info = load_model(file_path)
         
         model_name = 'final_british_rf'
