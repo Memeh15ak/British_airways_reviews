@@ -10,7 +10,8 @@ import json
 import dagshub
 import mlflow.sklearn
 from mlflow.tracking import MlflowClient
-
+import mlflow
+import dagshub
 dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
     raise EnvironmentError('DAGSHUB_PAT env is not set')
@@ -18,7 +19,7 @@ os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
 os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
 dagshub_url = "https://dagshub.com"
-repo_owner = "Memehak15ak"
+repo_owner = "Memeh15ak"
 repo_name = "British_airways_reviews"
 
 mlflow.set_tracking_uri(f'\{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
@@ -138,7 +139,7 @@ logger.debug('model info saved')
 
 def main():
     client = MlflowClient()
-    experiment = client.get_experiment_by_name("dvc")
+    experiment = client.get_experiment_by_name("dvc-pipeline")
     if experiment is None:
        print("Experiment not found. Exiting...")
        exit()
