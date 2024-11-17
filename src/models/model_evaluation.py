@@ -4,43 +4,48 @@ import pickle
 import os
 import logging
 from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, roc_auc_score
-import yaml
-import mlflow
 import json
-import dagshub
-import mlflow.sklearn
-from mlflow.tracking import MlflowClient
 import mlflow
-import dagshub
-dagshub_token = os.getenv("DAGSHUB_PAT")
-if not dagshub_token:
-    raise EnvironmentError('DAGSHUB_PAT env is not set')
-os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
-os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+import yaml
+from mlflow.tracking import MlflowClient
 
-dagshub_url = "https://dagshub.com"
-repo_owner = "Memeh15ak"
-repo_name = "British_airways_reviews"
+def setup_environment():
+    """Sets up environment variables and logger configuration."""
+    dagshub_token = os.getenv("DAGSHUB_PAT")
+    if not dagshub_token:
+        raise EnvironmentError('DAGSHUB_PAT env is not set')
 
-mlflow.set_tracking_uri(f'\{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+    os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+    os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
-logger = logging.getLogger('data_ingestion')
-logger.setLevel('DEBUG')
+    dagshub_url = "https://dagshub.com"
+    repo_owner = "Memeh15ak"
+    repo_name = "British_airways_reviews"
 
-console_handler = logging.StreamHandler()
-console_handler.setLevel('DEBUG')
+    # Fix for tracking URI
+    mlflow.set_tracking_uri(f"{dagshub_url}/{repo_owner}/{repo_name}.mlflow")
 
-file_handler = logging.FileHandler('errors.log')
-file_handler.setLevel('ERROR')
+    # Logger setup
+    logger = logging.getLogger('data_ingestion')
+    logger.setLevel('DEBUG')
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
-console_handler.setFormatter(formatter)
-file_handler.setFormatter(formatter)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel('DEBUG')
 
-logger.addHandler(console_handler)
-logger.addHandler(file_handler)
+    file_handler = logging.FileHandler('errors.log')
+    file_handler.setLevel('ERROR')
 
-def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    logger.debug('Environment setup complete.')
+    return logger
+
+def read_data(path: str, model_path: str, path2: str, logger) -> pd.DataFrame:
     try:
         tfidf_test = pd.read_csv(path)
     except FileNotFoundError:
@@ -52,7 +57,7 @@ def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
     except Exception as e:
         logger.error(f"An unexpected error occurred while reading test data: {e}")
         raise
-    
+
     try:
         with open(model_path, 'rb') as file:
             rf_model = pickle.load(file)
@@ -72,7 +77,7 @@ def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
 
         os.makedirs('./data/interim/y_pred', exist_ok=True)
         y_pred1.to_csv('./data/interim/y_pred/y_pred.csv', index=False)
-        logger.info("Data saved successfully")
+        logger.info("Predictions saved successfully.")
     except Exception as e:
         logger.error(f"An error occurred while making predictions or saving data: {e}")
         raise
@@ -92,23 +97,20 @@ def read_data(path: str, model_path: str, path2: str) -> pd.DataFrame:
 
     return tfidf_test, rf_model, y_test, y_pred
 
-logger.debug('file loaded successfully')
-
-def metrics(y_test: pd.DataFrame, y_pred: pd.DataFrame) -> float:
+def metrics(y_test: pd.DataFrame, y_pred: pd.DataFrame, logger) -> float:
     try:
         accuracy = accuracy_score(y_test, y_pred)
         precision = precision_score(y_test, y_pred)
         recall = recall_score(y_test, y_pred)
         auc = roc_auc_score(y_test, y_pred)
         report = classification_report(y_test, y_pred)
+        logger.debug("Metrics calculated successfully.")
     except Exception as e:
         logger.error(f"An error occurred while calculating metrics: {e}")
         raise
     return accuracy, precision, recall, auc
 
-logger.debug('metrics created')
-
-def store(path: str, accuracy: float, precision: float, recall: float, auc: float):
+def store(path: str, accuracy: float, precision: float, recall: float, auc: float, logger):
     try:
         metrics_dict = {
             'accuracy': accuracy,
@@ -118,12 +120,12 @@ def store(path: str, accuracy: float, precision: float, recall: float, auc: floa
         }
         with open(path, 'w') as file:
             json.dump(metrics_dict, file, indent=4)
+        logger.debug(f"Metrics stored at {path}.")
     except Exception as e:
         logger.error(f"An error occurred while storing metrics: {e}")
         raise
-logger.debug('metrics stored')
 
-def save_model_info(run_id, model_info, path):
+def save_model_info(run_id, model_info, path, logger):
     try:
         info = {
             'run_id': run_id,
@@ -132,29 +134,31 @@ def save_model_info(run_id, model_info, path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as file:
             json.dump(info, file, indent=4)
+        logger.debug(f"Model info saved at {path}.")
     except Exception as e:
         logger.error(f"An error occurred while storing model info: {e}")
         raise
 
-
-
 def main():
+    logger = setup_environment()  # Set up environment and logger
+    
     client = MlflowClient()
     experiment = client.get_experiment_by_name("dvc")
     if experiment is None:
-       print("Experiment not found. Exiting...")
-       exit()
+        logger.error("Experiment not found. Exiting...")
+        exit()
     else:
-       print(f"Using experiment ID: {experiment.experiment_id}")
-       mlflow.set_experiment(experiment_id=experiment.experiment_id)  
+        logger.info(f"Using experiment ID: {experiment.experiment_id}")
+        mlflow.set_experiment(experiment_id=experiment.experiment_id)
+
     with mlflow.start_run() as run:
         try:
             path = './data/interim/tfidf_test.csv'
             path2 = './data/interim/y_test.csv'
             model_path = './model.pkl'
-            tfidf_test, rf_model, y_test, y_pred = read_data(path, model_path, path2)
+            tfidf_test, rf_model, y_test, y_pred = read_data(path, model_path, path2, logger)
             
-            accuracy, precision, recall, auc = metrics(y_test, y_pred)
+            accuracy, precision, recall, auc = metrics(y_test, y_pred, logger)
             mlflow.log_metric('accuracy', accuracy)
             mlflow.log_metric('precision', precision)
             mlflow.log_metric('recall', recall)
@@ -166,12 +170,12 @@ def main():
                     mlflow.log_param(param_name, param_value)
             
             mlflow.sklearn.log_model(rf_model, "random_forest")
-            save_model_info(run.info.run_id, 'model', './exp_inf.json')
+            save_model_info(run.info.run_id, 'model', './exp_inf.json', logger)
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 
             metrics_path = './metrics.json'
-            store(metrics_path, accuracy, precision, recall, auc)
+            store(metrics_path, accuracy, precision, recall, auc, logger)
             
             mlflow.log_artifact(metrics_path)
         
@@ -181,6 +185,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
