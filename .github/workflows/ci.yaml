@@ -42,3 +42,10 @@ jobs:
           DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}  # Using secrets for secure access
         run: |
           dvc repro
+      - name: Run model tests 
+        env:
+          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+        run: |
+          python -m unitest tests/models_tests.py
+
+
