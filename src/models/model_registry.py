@@ -64,7 +64,7 @@ def register_model(model_name: str, model_info: dict):
         client.transition_model_version_stage(
             name=model_name,
             version=model_version.version,
-            stage='Production'
+            stage='Staging'
         )
         logger.info(f"Model {model_name} transitioned to 'Production' stage")
 
