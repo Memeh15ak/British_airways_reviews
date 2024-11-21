@@ -9,26 +9,40 @@ class TestModelLoading(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        dagshub_token=os.getenv("DAGSHUB_PAT")
+        # Set up environment variables
+        dagshub_token = os.getenv("DAGSHUB_PAT")
         if not dagshub_token:
-            raise EnvironmentError('DAGSHUB_PAT env is not set')
+            raise EnvironmentError('Environment variable DAGSHUB_PAT is not set. Please set it for authentication.')
+
         os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
         os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
         dagshub_url = "https://dagshub.com"
         repo_owner = "Memeh15ak"
         repo_name = "British_airways_reviews"
         mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
-        
+
+        # Load latest model version
         cls.new_model_name = "final_british_rf"
         cls.new_model_version = cls.get_latest_model_version(cls.new_model_name)
+        if cls.new_model_version is None:
+            raise ValueError(f"No model found in 'Staging' stage for {cls.new_model_name}.")
+
         cls.new_model_uri = f'models:/{cls.new_model_name}/{cls.new_model_version}'
         cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
 
-        # Load the vectorizer
-        cls.vectorizer = pickle.load(open('./models/tfidf.pkl', 'rb'))
+        # Load TF-IDF vectorizer
+        vectorizer_path = './models/tfidf.pkl'
+        if not os.path.exists(vectorizer_path):
+            raise FileNotFoundError(f'TF-IDF vectorizer file {vectorizer_path} is missing.')
+        cls.vectorizer = pickle.load(open(vectorizer_path, 'rb'))
 
         # Load holdout test data
-        cls.holdout_data = pd.read_csv('./data/interim/tfidf_test.csv')
+        data_path = './data/interim/tfidf_test.csv'
+        if not os.path.exists(data_path):
+            raise FileNotFoundError(f'Holdout test data {data_path} is missing.')
+        cls.holdout_data = pd.read_csv(data_path)
+        if cls.holdout_data.empty:
+            raise ValueError('Holdout dataset is empty.')
 
     @staticmethod
     def get_latest_model_version(model_name, stage="Staging"):
@@ -44,16 +58,20 @@ class TestModelLoading(unittest.TestCase):
         input_data = self.vectorizer.transform([input_text])
         input_df = pd.DataFrame(input_data.toarray(), columns=[str(i) for i in range(input_data.shape[1])])
 
+        # Ensure feature alignment
+        self.assertListEqual(
+            list(input_df.columns),
+            list(self.vectorizer.get_feature_names_out()),
+            "Feature names in the vectorizer do not match the model input features."
+        )
+
         prediction = self.new_model.predict(input_df)
-
-        self.assertEqual(input_df.shape[1], len(self.vectorizer.get_feature_names_out()))
-
         self.assertEqual(len(prediction), input_df.shape[0])
-        self.assertEqual(len(prediction.shape), 1)  # Assuming a single output column for binary classification
+        self.assertEqual(len(prediction.shape), 1)  # Binary classification output
 
     def test_model_performance(self):
-        X_holdout = self.holdout_data.iloc[:,0:-1]
-        y_holdout = self.holdout_data.iloc[:,-1]
+        X_holdout = self.holdout_data.iloc[:, 0:-1]
+        y_holdout = self.holdout_data.iloc[:, -1]
 
         y_pred_new = self.new_model.predict(X_holdout)
 
@@ -71,6 +89,7 @@ class TestModelLoading(unittest.TestCase):
         self.assertGreaterEqual(precision_new, expected_precision, f'Precision should be at least {expected_precision}')
         self.assertGreaterEqual(recall_new, expected_recall, f'Recall should be at least {expected_recall}')
         self.assertGreaterEqual(f1_new, expected_f1, f'F1 score should be at least {expected_f1}')
+
 
 if __name__ == "__main__":
     unittest.main()
