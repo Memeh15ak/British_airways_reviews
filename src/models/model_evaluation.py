@@ -165,7 +165,7 @@ def main():
             
             mlflow.sklearn.log_model(rf_model, "random_forest")
             save_model_info(run.info.run_id, "model", 'reports/exp_info.json',logger)
-            mlflow.log_artifact('./model_info.json')
+            mlflow.log_artifact('reports/exp_info.json')
 
             # Log the evaluation errors log file to MLflow
             mlflow.log_artifact('model_evaluation_errors.log')
