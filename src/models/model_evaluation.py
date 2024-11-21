@@ -168,7 +168,6 @@ def main():
             mlflow.log_artifact('reports/exp_info.json')
 
             # Log the evaluation errors log file to MLflow
-            mlflow.log_artifact('model_evaluation_errors.log')
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 
