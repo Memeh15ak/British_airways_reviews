@@ -47,33 +47,34 @@ def load_model(file_path: str) -> dict:
         raise
 
 
+def validate_model_info(model_info: dict):
+    required_keys = ['run_id', 'model_path']
+    if not all(key in model_info for key in required_keys):
+        logger.error(f"Missing keys in model_info. Required: {required_keys}, Found: {model_info.keys()}")
+        raise ValueError(f"Model info must contain: {required_keys}")
+
 def register_model(model_name: str, model_info: dict):
     try:
-        # Construct the model URI
+        validate_model_info(model_info)
         model_uri = f"runs:/{model_info['run_id']}/{model_info['model_path']}"
-        
-        # Log model URI for debugging
         logger.debug(f"Model URI: {model_uri}")
-
-        # Register the model
         model_version = mlflow.register_model(model_uri, model_name)
-        logger.debug(f"Registered model version: {model_version.version}")
+        logger.info(f"Model registered. Version: {model_version.version}")
 
-        # Transition model to Production stage
         client = mlflow.tracking.MlflowClient()
         client.transition_model_version_stage(
             name=model_name,
             version=model_version.version,
             stage='Staging'
         )
-        logger.info(f"Model {model_name} transitioned to 'Production' stage")
-
+        logger.info(f"Model {model_name} transitioned to 'Staging' stage")
     except MlflowException as e:
         logger.error(f"MLflow exception: {e}", exc_info=True)
         raise
     except Exception as e:
-        logger.error(f"Unexpected error during model registration: {e}", exc_info=True)
+        logger.error(f"Unexpected error: {e}", exc_info=True)
         raise
+
 
 
 def main():
