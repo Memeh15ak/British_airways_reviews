@@ -46,45 +46,34 @@ def load_model(file_path: str) -> dict:
         logger.error(f'Unexpected error occurred: {e}', exc_info=True)
         raise
 
-def validate_model_info(model_info: dict):
-    required_keys = ['run_id', 'model_path']
-    if not all(key in model_info for key in required_keys):
-        logger.error(f"Missing keys in model_info. Required: {required_keys}, Found: {model_info.keys()}")
-        raise ValueError(f"Model info must contain: {required_keys}")
-    
+
 def register_model(model_name: str, model_info: dict):
     try:
-        validate_model_info(model_info)
-        
-        # Log model as artifact if not already registered
+        # Construct the model URI
         model_uri = f"runs:/{model_info['run_id']}/{model_info['model_path']}"
-        logger.debug(f"Attempting to register model with URI: {model_uri}")
-
-        # Explicitly log the model to the experiment
-        with mlflow.start_run(run_id=model_info['run_id']):
-            mlflow.log_artifact(model_info['model_path'])
-            logger.info("Model artifact logged successfully")
+        
+        # Log model URI for debugging
+        logger.debug(f"Model URI: {model_uri}")
 
         # Register the model
         model_version = mlflow.register_model(model_uri, model_name)
-        logger.info(f"Model {model_name} registered with version {model_version.version}")
+        logger.debug(f"Registered model version: {model_version.version}")
 
-        # Transition to Staging
+        # Transition model to Production stage
         client = mlflow.tracking.MlflowClient()
         client.transition_model_version_stage(
             name=model_name,
             version=model_version.version,
-            stage="Staging"
+            stage='Staging'
         )
-        logger.info(f"Model {model_name} transitioned to 'Staging' stage")
+        logger.info(f"Model {model_name} transitioned to 'Production' stage")
 
     except MlflowException as e:
         logger.error(f"MLflow exception: {e}", exc_info=True)
         raise
     except Exception as e:
-        logger.error(f"Unexpected error: {e}", exc_info=True)
+        logger.error(f"Unexpected error during model registration: {e}", exc_info=True)
         raise
-
 
 
 def main():
