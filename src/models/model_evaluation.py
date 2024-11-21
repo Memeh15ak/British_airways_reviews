@@ -136,6 +136,14 @@ def save_model_info(run_id: str, model_path: str, path: str, logger):
         # Write model info
         with open(path, 'w') as file:
             json.dump(model_info, file, indent=4)
+            file.flush()
+            os.fsync(file.fileno())
+
+
+        with open(path, 'w') as file:
+            json.dump(model_info, file, indent=4)
+        logger.debug(f"Saved model info content: {model_info}")
+
         logger.info(f"Model info saved successfully at {path}: {model_info}")
     except Exception as e:
         logger.error(f"An error occurred while storing model info: {e}")
