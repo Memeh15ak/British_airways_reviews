@@ -125,19 +125,22 @@ def store(path: str, accuracy: float, precision: float, recall: float, auc: floa
         logger.error(f"An error occurred while storing metrics: {e}")
         raise
 
-def save_model_info(run_id:str, model_path:str, path:str, logger):
+def save_model_info(run_id: str, model_path: str, path: str, logger):
     try:
         model_info = {
             'run_id': run_id,
             'model_path': model_path
         }
         os.makedirs(os.path.dirname(path), exist_ok=True)
+        
+        # Write model info
         with open(path, 'w') as file:
             json.dump(model_info, file, indent=4)
-        logger.debug(f"Model info saved at {path}.")
+        logger.info(f"Model info saved successfully at {path}: {model_info}")
     except Exception as e:
         logger.error(f"An error occurred while storing model info: {e}")
         raise
+
 
 def main():
     logger = setup_environment()  # Set up environment and logger
