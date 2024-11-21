@@ -125,15 +125,15 @@ def store(path: str, accuracy: float, precision: float, recall: float, auc: floa
         logger.error(f"An error occurred while storing metrics: {e}")
         raise
 
-def save_model_info(run_id, model_info, path, logger):
+def save_model_info(run_id:str, model_path:str, path:str, logger):
     try:
-        info = {
+        model_info = {
             'run_id': run_id,
-            'model_path': model_info
+            'model_path': model_path
         }
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as file:
-            json.dump(info, file, indent=4)
+            json.dump(model_info, file, indent=4)
         logger.debug(f"Model info saved at {path}.")
     except Exception as e:
         logger.error(f"An error occurred while storing model info: {e}")
@@ -142,14 +142,7 @@ def save_model_info(run_id, model_info, path, logger):
 def main():
     logger = setup_environment()  # Set up environment and logger
     
-    client = MlflowClient()
-    experiment = client.get_experiment_by_name("dvc")
-    if experiment is None:
-        logger.error("Experiment not found. Exiting...")
-        exit()
-    else:
-        logger.info(f"Using experiment ID: {experiment.experiment_id}")
-        mlflow.set_experiment(experiment_id=experiment.experiment_id)
+    mlflow.set_experiment("dvc")
 
     with mlflow.start_run() as run:
         try:
@@ -169,8 +162,13 @@ def main():
                 for param_name, param_value in params.items():
                     mlflow.log_param(param_name, param_value)
             
+            
             mlflow.sklearn.log_model(rf_model, "random_forest")
-            save_model_info(run.info.run_id, f"{run.info.artifact_uri}/random_forest", './exp_inf.json', logger)
+            save_model_info(run.info.run_id, "model", 'reports/exp_info.json')
+            mlflow.log_artifact('./model_info.json')
+
+            # Log the evaluation errors log file to MLflow
+            mlflow.log_artifact('model_evaluation_errors.log')
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 
