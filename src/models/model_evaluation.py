@@ -170,7 +170,7 @@ def main():
                     mlflow.log_param(param_name, param_value)
             
             mlflow.sklearn.log_model(rf_model, "random_forest")
-            save_model_info(run.info.run_id, 'model', './exp_inf.json', logger)
+            save_model_info(run.info.run_id, f"{run.info.artifact_uri}/random_forest", './exp_inf.json', logger)
             mlflow.set_tag('author', 'mehak')
             mlflow.set_tag("experiment1", 'rf')
 
