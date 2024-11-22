@@ -41,6 +41,7 @@ stages:
     - model_training.max_depth
     outs:
     - model.pkl
+    
   model_evaluation:
     cmd: python src/models/model_evaluation.py
     deps:

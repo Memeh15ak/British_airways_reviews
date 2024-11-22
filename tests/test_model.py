@@ -4,9 +4,10 @@ import os
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import pickle
+import time
+
 
 class TestModelLoading(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         # Set up environment variables
@@ -28,7 +29,21 @@ class TestModelLoading(unittest.TestCase):
             raise ValueError(f"No model found in 'Staging' stage for {cls.new_model_name}.")
 
         cls.new_model_uri = f'models:/{cls.new_model_name}/{cls.new_model_version}'
-        cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
+
+        # Retry loading the model
+        MAX_RETRIES = 3
+        RETRY_DELAY = 10  # seconds
+        for attempt in range(MAX_RETRIES):
+            try:
+                cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
+                print(f"Model loaded: {cls.new_model_name}, version: {cls.new_model_version}")
+                break
+            except Exception as e:
+                if attempt < MAX_RETRIES - 1:
+                    print(f"Attempt {attempt + 1}/{MAX_RETRIES} to load model failed: {e}. Retrying in {RETRY_DELAY} seconds...")
+                    time.sleep(RETRY_DELAY)
+                else:
+                    raise
 
         # Load TF-IDF vectorizer
         vectorizer_path = './models/tfidf.pkl'
@@ -47,8 +62,10 @@ class TestModelLoading(unittest.TestCase):
     @staticmethod
     def get_latest_model_version(model_name, stage="Staging"):
         client = mlflow.MlflowClient()
-        latest_version = client.get_latest_versions(model_name, stages=[stage])
-        return latest_version[0].version if latest_version else None
+        versions = client.search_model_versions(f"name='{model_name}' and current_stage='{stage}'")
+        if versions:
+            print(f"Found version: {versions[0].version}")
+        return versions[0].version if versions else None
 
     def test_model_loaded_properly(self):
         self.assertIsNotNone(self.new_model)
