@@ -63,18 +63,22 @@ class TestModelLoading(unittest.TestCase):
     def get_latest_model_version(model_name, stage="Staging"):
         client = mlflow.MlflowClient()
         try:
-            print(f"Searching for model: {model_name} in stage: {stage}")
-            versions = client.search_model_versions(f"name='{model_name}' and current_stage='{stage}'")
-            if versions:
-                for version in versions:
-                    print(f"Found version: {version.version}, stage: {version.current_stage}")
-                return versions[0].version
+            print(f"Fetching all versions for model: {model_name}")
+            versions = client.search_model_versions(f"name='{model_name}'")
+            
+            staging_versions = [v for v in versions if v.current_stage == stage]
+            
+            if staging_versions:
+                latest_version = max(staging_versions, key=lambda v: int(v.version))
+                print(f"Latest version in stage {stage}: {latest_version.version}")
+                return latest_version.version
             else:
-                print(f"No versions found for model: {model_name} in stage: {stage}")
+                print(f"No versions found in stage {stage} for model: {model_name}")
                 return None
         except Exception as e:
-            print(f"Error while searching for model versions: {e}")
+            print(f"Error while fetching model versions: {e}")
             return None
+
 
 
     def test_model_loaded_properly(self):
