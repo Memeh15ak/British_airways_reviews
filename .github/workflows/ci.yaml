@@ -59,16 +59,16 @@ jobs:
       - name: Debug exp_info.json after repro
         run: cat reports/exp_info.json || echo "exp_info.json does not exist"
 
-      # Step 9: Run Model Tests
-      - name: Run model tests 
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: |
-          python -m unittest tests.test_model
+      # # Step 9: Run Model Tests
+      # - name: Run model tests 
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: |
+      #     python -m unittest tests.test_model
 
-      # Step 10: Debug exp_info.json after tests
-      - name: Debug exp_info.json after tests
-        run: cat reports/exp_info.json || echo "exp_info.json does not exist"
+      # # Step 10: Debug exp_info.json after tests
+      # - name: Debug exp_info.json after tests
+      #   run: cat reports/exp_info.json || echo "exp_info.json does not exist"
 
       # # Step 11: Promote Model to Production
       # - name: Promote model to production

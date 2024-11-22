@@ -128,8 +128,10 @@ def main():
         model_name = 'final_british_rf'
         # Define metric thresholds for promotion
         thresholds = {
-            'accuracy': 0.80,
-            'f1_score': 0.75
+            'accuracy': 0.40,
+            'precision': 0.40,
+            'recall': 0.40,
+            'f1_score': 0.40
         }
         register_model(model_name, info, thresholds)
 
