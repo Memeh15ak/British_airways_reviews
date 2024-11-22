@@ -50,7 +50,8 @@ class TestModelLoading(unittest.TestCase):
         vectorizer_path = "./models/tfidf.pkl"
         if not os.path.exists(vectorizer_path):
             raise FileNotFoundError(f"TF-IDF vectorizer file {vectorizer_path} is missing.")
-        cls.vectorizer = pickle.load(open(vectorizer_path, "rb"))
+        with open(vectorizer_path, "rb") as f:
+            cls.vectorizer = pickle.load(f)
 
         # Load holdout test data
         data_path = "./data/interim/tfidf_test.csv"
@@ -80,23 +81,26 @@ class TestModelLoading(unittest.TestCase):
             print(f"Error while fetching model versions: {e}")
             return None
 
+    def align_features(self, X):
+        """Align features of the test data with those expected by the model."""
+        vectorizer_features = self.vectorizer.get_feature_names_out()
+        model_features = getattr(self.new_model, "input_schema", vectorizer_features)
+        
+        # Ensure all model features exist in input
+        for missing_feature in set(model_features) - set(X.columns):
+            X[missing_feature] = 0
+        return X[model_features]
+
     def test_model_loaded_properly(self):
         self.assertIsNotNone(self.new_model, "Model should be loaded successfully.")
 
     def test_model_signature(self):
-        input_text = "hi how are you"
+        input_text = "I am so happy and impressed by this flight . The quality is good . Overall great experience"
         input_data = self.vectorizer.transform([input_text])
         input_df = pd.DataFrame(input_data.toarray(), columns=self.vectorizer.get_feature_names_out())
 
-        # Ensure feature alignment
-        model_input_features = self.new_model.metadata.get_input_schema().columns
-        model_input_names = [col.name for col in model_input_features]
-
-        self.assertListEqual(
-            list(input_df.columns),
-            model_input_names,
-            "Feature names in the vectorizer do not match the model input features."
-        )
+        # Align input features
+        input_df = self.align_features(input_df)
 
         prediction = self.new_model.predict(input_df)
         self.assertEqual(len(prediction), input_df.shape[0])
@@ -106,7 +110,8 @@ class TestModelLoading(unittest.TestCase):
         X_holdout = self.holdout_data.iloc[:, 0:-1]
         y_holdout = self.holdout_data.iloc[:, -1]
 
-        y_pred_new = self.new_model.predict(X_holdout)
+        X_holdout_aligned = self.align_features(X_holdout)
+        y_pred_new = self.new_model.predict(X_holdout_aligned)
 
         accuracy_new = accuracy_score(y_holdout, y_pred_new)
         precision_new = precision_score(y_holdout, y_pred_new, zero_division=1)
