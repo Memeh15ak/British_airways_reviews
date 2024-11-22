@@ -3,9 +3,10 @@ import mlflow
 import logging
 import dagshub
 from mlflow.exceptions import MlflowException
-import os 
+import os
 
-dagshub_token=os.getenv("DAGSHUB_PAT")
+# Set up environment variables
+dagshub_token = os.getenv("DAGSHUB_PAT")
 if not dagshub_token:
     raise EnvironmentError('DAGSHUB_PAT env is not set')
 os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
@@ -17,7 +18,8 @@ repo_name = "British_airways_reviews"
 
 mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
-logger = logging.getLogger('data_ingestion')
+# Set up logging
+logger = logging.getLogger('model_management')
 logger.setLevel('DEBUG')
 
 console_handler = logging.StreamHandler()
@@ -53,7 +55,36 @@ def validate_model_info(model_info: dict):
         logger.error(f"Missing keys in model_info. Required: {required_keys}, Found: {model_info.keys()}")
         raise ValueError(f"Model info must contain: {required_keys}")
 
-def register_model(model_name: str, model_info: dict):
+
+def get_model_metrics(run_id: str) -> dict:
+    """Fetch the metrics of the model from the MLflow run."""
+    try:
+        client = mlflow.tracking.MlflowClient()
+        metrics = client.get_run(run_id).data.metrics
+        logger.debug(f"Fetched metrics for run {run_id}: {metrics}")
+        return metrics
+    except Exception as e:
+        logger.error(f"Failed to fetch metrics for run {run_id}: {e}", exc_info=True)
+        raise
+
+
+def should_promote_to_production(metrics: dict, thresholds: dict) -> bool:
+    """
+    Determine if the model should be promoted to production based on metrics.
+    Args:
+        metrics (dict): Dictionary of model metrics.
+        thresholds (dict): Threshold values for promotion.
+    Returns:
+        bool: True if the model meets the criteria for promotion, False otherwise.
+    """
+    for metric, threshold in thresholds.items():
+        if metrics.get(metric, 0) < threshold:
+            logger.info(f"Metric {metric} below threshold: {metrics.get(metric)} < {threshold}")
+            return False
+    return True
+
+
+def register_model(model_name: str, model_info: dict, thresholds: dict):
     try:
         validate_model_info(model_info)
         model_uri = f"runs:/{model_info['run_id']}/{model_info['model_path']}"
@@ -68,6 +99,19 @@ def register_model(model_name: str, model_info: dict):
             stage='Staging'
         )
         logger.info(f"Model {model_name} transitioned to 'Staging' stage")
+
+        # Evaluate metrics and promote to production if thresholds are met
+        metrics = get_model_metrics(model_info['run_id'])
+        if should_promote_to_production(metrics, thresholds):
+            client.transition_model_version_stage(
+                name=model_name,
+                version=model_version.version,
+                stage='Production'
+            )
+            logger.info(f"Model {model_name} transitioned to 'Production' stage")
+        else:
+            logger.info(f"Model {model_name} did not meet the criteria for Production.")
+
     except MlflowException as e:
         logger.error(f"MLflow exception: {e}", exc_info=True)
         raise
@@ -76,14 +120,18 @@ def register_model(model_name: str, model_info: dict):
         raise
 
 
-
 def main():
     try:
         file_path = 'reports/exp_info.json'
         info = load_model(file_path)
-        
+
         model_name = 'final_british_rf'
-        register_model(model_name, info)
+        # Define metric thresholds for promotion
+        thresholds = {
+            'accuracy': 0.80,
+            'f1_score': 0.75
+        }
+        register_model(model_name, info, thresholds)
 
     except Exception as e:
         logger.error(f"Error: An unexpected error occurred in the main function: {e}", exc_info=True)

@@ -70,16 +70,16 @@ jobs:
       - name: Debug exp_info.json after tests
         run: cat reports/exp_info.json || echo "exp_info.json does not exist"
 
-      # Step 11: Promote Model to Production
-      - name: Promote model to production
-        if: success()
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python ./scripts/promote_model.py
+      # # Step 11: Promote Model to Production
+      # - name: Promote model to production
+      #   if: success()
+      #   env:
+      #     DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+      #   run: python ./scripts/promote_model.py
 
-      # Step 12: Debug exp_info.json after promotion
-      - name: Debug exp_info.json after promotion
-        run: cat reports/exp_info.json || echo "exp_info.json does not exist"
+      # # Step 12: Debug exp_info.json after promotion
+      # - name: Debug exp_info.json after promotion
+      #   run: cat reports/exp_info.json || echo "exp_info.json does not exist"
 
       # Step 13: Run Flask App Tests
       - name: Run Flask app tests
