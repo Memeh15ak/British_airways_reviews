@@ -62,10 +62,20 @@ class TestModelLoading(unittest.TestCase):
     @staticmethod
     def get_latest_model_version(model_name, stage="Staging"):
         client = mlflow.MlflowClient()
-        versions = client.search_model_versions(f"name='{model_name}' and current_stage='{stage}'")
-        if versions:
-            print(f"Found version: {versions[0].version}")
-        return versions[0].version if versions else None
+        try:
+            print(f"Searching for model: {model_name} in stage: {stage}")
+            versions = client.search_model_versions(f"name='{model_name}' and current_stage='{stage}'")
+            if versions:
+                for version in versions:
+                    print(f"Found version: {version.version}, stage: {version.current_stage}")
+                return versions[0].version
+            else:
+                print(f"No versions found for model: {model_name} in stage: {stage}")
+                return None
+        except Exception as e:
+            print(f"Error while searching for model versions: {e}")
+            return None
+
 
     def test_model_loaded_properly(self):
         self.assertIsNotNone(self.new_model)
