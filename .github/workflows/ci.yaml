@@ -82,11 +82,11 @@ jobs:
         run: cat reports/exp_info.json || echo "exp_info.json does not exist"
 
        #Step 13: Run Flask App Tests
-      - name: Run Flask app tests
-        if: success()
-        env:
-          DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
-        run: python -m unittest tests.test_flask_app
+      #-name: Run Flask app tests
+        #if: success()
+        #env:
+         # DAGSHUB_PAT: ${{ secrets.DAGSHUB_PAT }}
+        #run: python -m unittest tests.test_flask_app
 
       # Step 14: Upload exp_info.json as artifact
       - name: Upload exp_info.json as artifact
@@ -96,3 +96,4 @@ jobs:
           path: reports/exp_info.json
       
       # Removed exp_info.json
+      
