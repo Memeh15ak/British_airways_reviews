@@ -40,10 +40,10 @@ mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 
 # Thresholds for model promotion
 METRIC_THRESHOLDS = {
-    "accuracy": 0.55,
-    "precision": 0.50,
-    "recall": 0.50,
-    "auc": 0.50
+    "ACCURACY": 0.75,  # Lowered from 0.85
+    "PRECISION": 0.70,
+    "RECALL": 0.70,
+    "AUC": 0.67  # Lowered from 0.90
 }
 
 
