@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 import mlflow
 import dagshub
 import pickle
-from preprocessing_output import main
+from flask_app.preprocessing_output import main
 import pandas as pd
 import numpy as np
 import os
