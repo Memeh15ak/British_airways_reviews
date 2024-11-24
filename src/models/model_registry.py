@@ -116,10 +116,10 @@ def register_model(model_name: str, model_info: dict, metrics: dict):
             client.transition_model_version_stage(
                 name=model_name,
                 version=model_version.version,
-                stage="Staging"
+                stage="Production"
             )
-            logger.info(f"Promoted model {model_name} version {model_version.version} to Staging.")
-
+            logger.info(f"Promoted model {model_name} version {model_version.version} to Production.")
+    # suno im doing a jugaad im promoting in either case okay??
     except MlflowException as e:
         logger.error(f"MLflow exception: {e}", exc_info=True)
         raise
