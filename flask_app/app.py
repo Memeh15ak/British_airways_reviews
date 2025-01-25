@@ -66,6 +66,7 @@ def get_latest_model_version(model_name):
     latest_version = client.get_latest_versions(model_name, stages=["Production"])
     if not latest_version:
         latest_version = client.get_latest_versions(model_name, stages=["None"])
+        print(latest_version)
     return latest_version[0].version if latest_version else None
 
 model_name = "final_british_rf"
@@ -82,27 +83,28 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        text = request.form['text'] 
-           
-        print(text)
+        print("Received request...")
+        text = request.form.get('text', '')
+        print(f"Received text: {text}")
         
-        processed_text = normalize(text)  # Assuming this function processes the text
-        print(processed_text)
+        processed_text = normalize(text)
+        print(f"Processed text: {processed_text}")
         
         features = vectorizer.transform([text])
-        print(features)
+        print(f"Transformed features: {features}")
         
         features_df = pd.DataFrame(features.toarray(), columns=vectorizer.get_feature_names_out())
-        print(features_df)
+        print(f"Features DataFrame: {features_df}")
         
         result = model.predict(features_df)
-        print(result)
-
+        print(f"Prediction result: {result}")
+        
         return render_template('index.html', result=result[0])
-
     except Exception as e:
         print(f"Error during prediction: {e}")
         return render_template('index.html', result="An error occurred. Please try again.")
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
