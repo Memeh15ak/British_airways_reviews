@@ -46,7 +46,7 @@ stages:
     params:
       params.yaml:
         feature_engineering.max_df: 0.85
-        feature_engineering.max_features: 1600
+        feature_engineering.max_features: 1700
         feature_engineering.min_df: 0.002
         feature_engineering.random_state: 42
         feature_engineering.stop_words: english
@@ -55,13 +55,13 @@ stages:
     outs:
     - path: data/interim
       hash: md5
-      md5: 0f04a4afac1748f7a931534aa738aa87.dir
-      size: 27087312
+      md5: 996845d619ab273cdc9abab0ac82ac21.dir
+      size: 28605253
       nfiles: 3
     - path: models/tfidf.pkl
       hash: md5
-      md5: f9136167e301b5e640c536e58bcb1218
-      size: 60063
+      md5: 99c17066b7812fdc8c50088ce0f61406
+      size: 63767
   model_training:
     cmd: python src/models/model_training.py
     deps:
