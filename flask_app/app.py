@@ -86,7 +86,7 @@ def predict():
     try:
         print("Received request...")
         text = request.form.get('text', '')
-        print(f"Receivedd text: {text}")
+        print(f"Received textt: {text}")
         
         processed_text = normalize(text)
         print(f"Processed text: {processed_text}")
