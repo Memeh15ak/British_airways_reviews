@@ -48,32 +48,32 @@ def normalize(text: str) -> str:
     tokens = tokenize(text)
     return tokens
 
-dagshub_token = os.getenv("DAGSHUB_PAT")
-if not dagshub_token:
-    raise EnvironmentError('DAGSHUB_PAT env is not set')
-os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
-os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+# dagshub_token = os.getenv("DAGSHUB_PAT")
+# if not dagshub_token:
+#     raise EnvironmentError('DAGSHUB_PAT env is not set')
+# os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_token
+# os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
 
-dagshub_url = "https://dagshub.com"
-repo_owner = "Memeh15ak"
-repo_name = "British_airways_reviews"
+# dagshub_url = "https://dagshub.com"
+# repo_owner = "Memeh15ak"
+# repo_name = "British_airways_reviews"
 
-mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
+# mlflow.set_tracking_uri(f'{dagshub_url}/{repo_owner}/{repo_name}.mlflow')
 app = Flask(__name__)
 
-def get_latest_model_version(model_name):
-    client = mlflow.MlflowClient()
-    latest_version = client.get_latest_versions(model_name, stages=["Production"])
-    if not latest_version:
-        latest_version = client.get_latest_versions(model_name, stages=["None"])
-        print(latest_version)
-    return latest_version[0].version if latest_version else None
+# def get_latest_model_version(model_name):
+#     client = mlflow.MlflowClient()
+#     latest_version = client.get_latest_versions(model_name, stages=["Production"])
+#     if not latest_version:
+#         latest_version = client.get_latest_versions(model_name, stages=["None"])
+#         print(latest_version)
+#     return latest_version[0].version if latest_version else None
 
-model_name = "final_british_rf"
-model_version = get_latest_model_version(model_name)
+# model_name = "final_british_rf"
+# model_version = get_latest_model_version(model_name)
 
-model_uri = f'models:/{model_name}/{model_version}'
-model = mlflow.pyfunc.load_model(model_uri)
+# model_uri = f'models:/{model_name}/{model_version}'
+# model = mlflow.pyfunc.load_model(model_uri)
 model = pickle.load(open('model.pkl', 'rb'))
 vectorizer = pickle.load(open('models/tfidf.pkl', 'rb'))
 
