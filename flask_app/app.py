@@ -74,6 +74,7 @@ model_version = get_latest_model_version(model_name)
 
 model_uri = f'models:/{model_name}/{model_version}'
 model = mlflow.pyfunc.load_model(model_uri)
+model = pickle.load(open('model.pkl', 'rb'))
 vectorizer = pickle.load(open('models/tfidf.pkl', 'rb'))
 
 @app.route('/')
@@ -85,7 +86,7 @@ def predict():
     try:
         print("Received request...")
         text = request.form.get('text', '')
-        print(f"Received text: {text}")
+        print(f"Receivedd text: {text}")
         
         processed_text = normalize(text)
         print(f"Processed text: {processed_text}")
